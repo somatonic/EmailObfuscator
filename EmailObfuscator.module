@@ -1,0 +1,98 @@
+<?php
+
+/**
+ *  Email Obfuscator module
+ *
+ *  Orignially created by 12345j
+ *  @last_modified 30/03/2012 by Soma
+ *  
+ * Changelog:
+ * 30/03/2012 - Fixed bug with $config; added configuration for script location
+ * 
+ * ProcessWire 2.x 
+ * Copyright (C) 2010 by Ryan Cramer 
+ * Licensed under GNU/GPL v2, see LICENSE.TXT
+ * 
+ * http://www.processwire.com
+ * http://www.ryancramer.com
+ *
+ */
+
+
+
+class EmailObfuscator extends WireData implements Module, ConfigurableModule {
+
+	static protected $defaults = array(
+		'script_location' => "</head>"
+	);
+
+	public static function getModuleInfo() {
+
+		return array(
+			'title' => 'Email Obfuscator', 
+			'version' => 100, 
+			'summary' => 'A module that prevents emails from being harvested by spam bots from your site. It obfuscates also mailto: correctly and link text in case it\'s an email.',
+			'href' => 'http://processwire.com/talk/topic/497-email-obfuscator-module',
+ 			'singular' => true, 
+			'autoload' => true, 
+			);
+	}
+
+	/**
+	 * Initialize the module
+	 *
+	 * ProcessWire calls this when the module is loaded. For 'autoload' modules, this will be called
+	 * when ProcessWire's API is ready. As a result, this is a good place to attach hooks. 
+	 *
+	 */
+	public function init() { 
+
+		// add a hook after each page is rendered and modify the output
+		$this->addHookAfter('Page::render', $this, 'obfuscate'); 
+
+	}
+
+	/**
+	 * obfuscates the email
+	 *
+	 */
+	public function obfuscate($event) {
+
+		$page = $event->object;
+		// don't add this to the admin pages
+		if($page->template == 'admin') return;
+		
+		// get configuration
+		$config = self::$defaults;
+		foreach($config as $key => $unused) {
+			$config[$key] = $this->get($key) ? $this->get($key) : $config[$key] ;
+		}
+
+		$content = $event->return;
+
+		$content = preg_replace_callback('/(<a[^>]*href=")(mailto:)([^"]+)/',create_function('$matches','return $matches[1] . "GOSPAM:" . strrev($matches[3]);'),$content);
+		$content = preg_replace_callback('/\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]+\b(?!([^<]+)?>)/i', create_function('$matches','return "<span style=\"unicode-bidi:bidi-override; direction: rtl;\" class=\"email-obfuscator-unreverse\">" . strrev($matches[0]) . "</span>";'),$content);
+		$class = $this->className; 
+		$url = $this->config->urls->$class . "$class.js";
+		$content = str_ireplace($config['script_location'], "<script src='$url'></script>\n".$config['script_location'], $content); 
+		$event->return = $content;
+	}
+
+	static public function getModuleConfigInputfields(array $data) {
+		
+		$modules = wire('modules');
+		$data = array_merge(self::$defaults, $data);
+		
+		$fields = new InputfieldWrapper();
+		
+		$field = $modules->get("InputfieldText"); 
+		$field->attr('name', 'script_location'); 
+		$field->attr('value', $data['script_location']); 
+		$field->label = "Script location";
+		$field->description = "Enter the html tag where the 'EmailObfuscator.js' script should be prepended. For example </head> or </body>.";
+		$fields->append($field);
+		
+		
+		return $fields;
+	}
+}
