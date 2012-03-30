@@ -16,5 +16,5 @@ This Module will obfuscate all email on your website automaticly. It will add a 
 
 How to install:
 - Download the contents of this repository and put the folder renamed as "EmailObfuscator" into your site/modules/ folder
-- Login to processwire and got to Modules page and click "Check for new modules". You should see a note that two new modules were found. Install the module.
+- Login to processwire and got to Modules page and click "Check for new modules". You should see a note that a new module was found. Install the module, and configure to your need.
 - Done
