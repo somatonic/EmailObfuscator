@@ -1,4 +1,4 @@
-EmailObfuscator 1.0.0
+EmailObfuscator 1.0.1
 
 A custom module for ProcessWire2.1+
 
@@ -6,9 +6,11 @@ Original version by 12345j
 
 Last modified by Philipp "Soma" Urlich, philipp at urlich dot ch
 
+
 Changelog:
+* 01/07/2016 - Changed regex to account for href="mailto: and href='mailto:
 * 30/03/2012 - Fixed bug with $config; added configuration for script location
- 
+
 
 http://processwire.com/talk/topic/497-email-obfuscator-module
 
