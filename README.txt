@@ -1,4 +1,4 @@
-EmailObfuscator 1.0.1
+EmailObfuscator 1.0.2
 
 A custom module for ProcessWire2.1+
 
@@ -8,6 +8,7 @@ Last modified by Philipp "Soma" Urlich, philipp at urlich dot ch
 
 
 Changelog:
+* 19/07/2016 - Allow empty script location to avoid adding EmailObfuscator.js automatically + save module settings on install (tpr)
 * 01/07/2016 - Changed regex to account for href="mailto: and href='mailto:
 * 30/03/2012 - Fixed bug with $config; added configuration for script location
 
