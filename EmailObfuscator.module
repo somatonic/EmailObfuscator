@@ -27,8 +27,8 @@ class EmailObfuscator extends WireData implements Module, ConfigurableModule {
 
 		return array(
 			'title' => 'Email Obfuscator',
-			'version' => 101,
-			'summary' => 'A module that prevents emails from being harvested by spam bots from your site. It obfuscates also mailto: correctly and link text in case it\'s an email.',
+			'version' => 102,
+			'summary' => __('A module that prevents emails from being harvested by spam bots from your site. It obfuscates also mailto: correctly and link text in case it\'s an email.'),
 			'href' => 'http://processwire.com/talk/topic/497-email-obfuscator-module',
  			'singular' => true,
 			'autoload' => true,
@@ -43,6 +43,11 @@ class EmailObfuscator extends WireData implements Module, ConfigurableModule {
 	 *
 	 */
 	public function init() {
+
+		// apply default configuration
+		foreach(self::$defaults as $key => $v) {
+			$this->$key = isset($this->$key) ? $this->$key : $v;
+		}
 
 		// add a hook after each page is rendered and modify the output
 		$this->addHookAfter('Page::render', $this, 'obfuscate');
@@ -59,19 +64,16 @@ class EmailObfuscator extends WireData implements Module, ConfigurableModule {
 		// don't add this to the admin pages
 		if($page->template == 'admin') return;
 
-		// get configuration
-		$config = self::$defaults;
-		foreach($config as $key => $unused) {
-			$config[$key] = $this->get($key) ? $this->get($key) : $config[$key] ;
-		}
-
 		$content = $event->return;
-
 		$content = preg_replace_callback('/(<a[^>]*href="|\')(mailto:)([^"|\']+)/',create_function('$matches','return $matches[1] . "GOSPAM:" . strrev($matches[3]);'),$content);
 		$content = preg_replace_callback('/\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]+\b(?!([^<]+)?>)/i', create_function('$matches','return "<span style=\"unicode-bidi:bidi-override; direction: rtl;\" class=\"email-obfuscator-unreverse\">" . strrev($matches[0]) . "</span>";'),$content);
 		$class = $this->className;
 		$url = $this->config->urls->$class . "$class.js";
-		$content = str_ireplace($config['script_location'], "<script src='$url'></script>\n".$config['script_location'], $content);
+
+		if($this->script_location) {
+			$content = str_ireplace($this->script_location, "<script src='$url'></script>\n$this->script_location" , $content);
+		}
+
 		$event->return = $content;
 	}
 
@@ -86,7 +88,8 @@ class EmailObfuscator extends WireData implements Module, ConfigurableModule {
 		$field->attr('name', 'script_location');
 		$field->attr('value', $data['script_location']);
 		$field->label = "Script location";
-		$field->description = "Enter the html tag where the 'EmailObfuscator.js' script should be prepended. For example </head> or </body>.";
+		$field->description = __("Enter the html tag where the 'EmailObfuscator.js' script should be prepended. Leave empty if you don't want the script to get added.");
+		$field->notes = __("Example </head> or </body>.");
 		$fields->append($field);
 
 
