@@ -27,7 +27,7 @@ class EmailObfuscator extends WireData implements Module, ConfigurableModule {
 
 		return array(
 			'title' => 'Email Obfuscator',
-			'version' => 102,
+			'version' => 103,
 			'summary' => __('A module that prevents emails from being harvested by spam bots from your site. It obfuscates also mailto: correctly and link text in case it\'s an email.'),
 			'href' => 'http://processwire.com/talk/topic/497-email-obfuscator-module',
  			'singular' => true,
@@ -65,8 +65,8 @@ class EmailObfuscator extends WireData implements Module, ConfigurableModule {
 		if($page->template == 'admin') return;
 
 		$content = $event->return;
-		$content = preg_replace_callback('/(<a[^>]*href="|\')(mailto:)([^"|\']+)/',create_function('$matches','return $matches[1] . "GOSPAM:" . strrev($matches[3]);'),$content);
-		$content = preg_replace_callback('/\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]+\b(?!([^<]+)?>)/i', create_function('$matches','return "<span style=\"unicode-bidi:bidi-override; direction: rtl;\" class=\"email-obfuscator-unreverse\">" . strrev($matches[0]) . "</span>";'),$content);
+		$content = preg_replace_callback('/(<a[^>]*href="|\')(mailto:)([^"|\']+)/',function($matches) { return $matches[1] . "GOSPAM:" . strrev($matches[3]);},$content);
+		$content = preg_replace_callback('/\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]+\b(?!([^<]+)?>)/i', function($matches) { return "<span style=\"unicode-bidi:bidi-override; direction: rtl;\" class=\"email-obfuscator-unreverse\">" . strrev($matches[0]) . "</span>";},$content);
 		$class = $this->className;
 		$url = $this->config->urls->$class . "$class.js";
 
