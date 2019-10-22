@@ -65,8 +65,8 @@ class EmailObfuscator extends WireData implements Module, ConfigurableModule {
 		if($page->template == 'admin') return;
 
 		$content = $event->return;
-		$content = preg_replace_callback('/(<a[^>]*href="|\')(mailto:)([^"|\']+)/',create_function('$matches','return $matches[1] . "GOSPAM:" . strrev($matches[3]);'),$content);
-		$content = preg_replace_callback('/\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]+\b(?!([^<]+)?>)/i', create_function('$matches','return "<span style=\"unicode-bidi:bidi-override; direction: rtl;\" class=\"email-obfuscator-unreverse\">" . strrev($matches[0]) . "</span>";'),$content);
+		$content = preg_replace_callback('/(<a[^>]*href="|\')(mailto:)([^"|\']+)/', function($matches) { return $matches[1] . "GOSPAM:" . strrev($matches[3]); }, $content);
+		$content = preg_replace_callback('/\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]+\b(?!([^<]+)?>)/i', function($matches) { return "<span style=\"unicode-bidi:bidi-override; direction: rtl;\" class=\"email-obfuscator-unreverse\">" . strrev($matches[0]) . "</span>"; }, $content);
 		$class = $this->className;
 		$url = $this->config->urls->$class . "$class.js";
 
