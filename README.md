@@ -17,6 +17,7 @@ This Module will obfuscate all email on your website automaticly. It will add a 
 
 ## Changelog:
 
+* 19/06/2020 - Added PW 3.x compatibility, fix PHP deprecation notice, added delay in the EmailObfuscator.js to wait for JQuery to load
 * 20/07/2016 - Added support for leaving script location configuration empty to not append the EmailObfuscator.js
 * 01/07/2016 - Changed regex to account for href="mailto: and href='mailto:
 * 30/03/2012 - Fixed bug with $config; added configuration for script location
