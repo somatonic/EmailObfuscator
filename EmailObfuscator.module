@@ -1,12 +1,12 @@
-<?php
+<?php namespace ProcessWire;
 
 /**
  *  Email Obfuscator module
  *
  *  Orignially created by 12345j
- *  @last_modified 30/03/2012 by Soma
+ *  @last_modified 19/06/2020 by Lesaff
  *
- * ProcessWire 2.x
+ * ProcessWire 3.x
  * Copyright (C) 2010 by Ryan Cramer
  * Licensed under GNU/GPL v2, see LICENSE.TXT
  *
@@ -19,80 +19,94 @@
 
 class EmailObfuscator extends WireData implements Module, ConfigurableModule {
 
-	static protected $defaults = array(
-		'script_location' => "</head>"
-	);
+    static protected $defaults = array(
+        'script_location' => "</head>"
+    );
 
-	public static function getModuleInfo() {
+    public static function getModuleInfo() {
 
-		return array(
-			'title' => 'Email Obfuscator',
-			'version' => 102,
-			'summary' => __('A module that prevents emails from being harvested by spam bots from your site. It obfuscates also mailto: correctly and link text in case it\'s an email.'),
-			'href' => 'http://processwire.com/talk/topic/497-email-obfuscator-module',
- 			'singular' => true,
-			'autoload' => true,
-			);
-	}
+        return array(
+            'title' => 'Email Obfuscator',
+            'version' => 200,
+            'summary' => __('A module that prevents emails from being harvested by spam bots from your site. It obfuscates also mailto: correctly and link text in case it\'s an email.'),
+            'href' => 'http://processwire.com/talk/topic/497-email-obfuscator-module',
+            'singular' => true,
+            'autoload' => true,
+        	'requires' => 'ProcessWire>=2.5',
+            );
+    }
 
-	/**
-	 * Initialize the module
-	 *
-	 * ProcessWire calls this when the module is loaded. For 'autoload' modules, this will be called
-	 * when ProcessWire's API is ready. As a result, this is a good place to attach hooks.
-	 *
-	 */
-	public function init() {
+    /**
+     * Initialize the module
+     *
+     * ProcessWire calls this when the module is loaded. For 'autoload' modules, this will be called
+     * when ProcessWire's API is ready. As a result, this is a good place to attach hooks.
+     *
+     */
+    public function init() {
 
-		// apply default configuration
-		foreach(self::$defaults as $key => $v) {
-			$this->$key = isset($this->$key) ? $this->$key : $v;
-		}
+        // apply default configuration
+        foreach(self::$defaults as $key => $v) {
+            $this->$key = isset($this->$key) ? $this->$key : $v;
+        }
 
-		// add a hook after each page is rendered and modify the output
-		$this->addHookAfter('Page::render', $this, 'obfuscate');
+        // add a hook after each page is rendered and modify the output
+        $this->addHookAfter('Page::render', $this, 'obfuscate');
 
-	}
+    }
 
-	/**
-	 * obfuscates the email
-	 *
-	 */
-	public function obfuscate($event) {
+    /**
+     * obfuscates the email
+     *
+     */
+    public function obfuscate($event) {
 
-		$page = $event->object;
-		// don't add this to the admin pages
-		if($page->template == 'admin') return;
+        $page = $event->object;
+        // don't add this to the admin pages
+        if($page->template == 'admin') return;
 
-		$content = $event->return;
-		$content = preg_replace_callback('/(<a[^>]*href="|\')(mailto:)([^"|\']+)/',create_function('$matches','return $matches[1] . "GOSPAM:" . strrev($matches[3]);'),$content);
-		$content = preg_replace_callback('/\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]+\b(?!([^<]+)?>)/i', create_function('$matches','return "<span style=\"unicode-bidi:bidi-override; direction: rtl;\" class=\"email-obfuscator-unreverse\">" . strrev($matches[0]) . "</span>";'),$content);
-		$class = $this->className;
-		$url = $this->config->urls->$class . "$class.js";
+        $content = $event->return;
 
-		if($this->script_location) {
-			$content = str_ireplace($this->script_location, "<script src='$url'></script>\n$this->script_location" , $content);
-		}
+        $content = preg_replace_callback(
+            '/(<a[^>]*href="|\')(mailto:)([^"|\']+)/', 
+            function($matches) {
+                return $matches[1] . "GOSPAM:" . strrev($matches[3]);
+            },
+            $content);
 
-		$event->return = $content;
-	}
+        $content = preg_replace_callback(
+            '/\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]+\b(?!([^<]+)?>)/i', 
+            function($matches) {
+                return "<span style=\"unicode-bidi:bidi-override; direction: rtl;\" class=\"email-obfuscator-unreverse\">" . strrev($matches[0]) . "</span>";
+            },
+            $content);
 
-	static public function getModuleConfigInputfields(array $data) {
+        $class = $this->className;
+        $url = $this->config->urls->$class . "$class.js";
 
-		$modules = wire('modules');
-		$data = array_merge(self::$defaults, $data);
+        if($this->script_location) {
+            $content = str_ireplace($this->script_location, "<script src='$url'></script>\n$this->script_location" , $content);
+        }
 
-		$fields = new InputfieldWrapper();
+        $event->return = $content;
+    }
 
-		$field = $modules->get("InputfieldText");
-		$field->attr('name', 'script_location');
-		$field->attr('value', $data['script_location']);
-		$field->label = "Script location";
-		$field->description = __("Enter the html tag where the 'EmailObfuscator.js' script should be prepended. Leave empty if you don't want the script to get added.");
-		$field->notes = __("Example </head> or </body>.");
-		$fields->append($field);
+    static public function getModuleConfigInputfields(array $data) {
+
+        $modules = wire('modules');
+        $data = array_merge(self::$defaults, $data);
+
+        $fields = new InputfieldWrapper();
+
+        $field = $modules->get("InputfieldText");
+        $field->attr('name', 'script_location');
+        $field->attr('value', $data['script_location']);
+        $field->label = "Script location";
+        $field->description = __("Enter the html tag where the 'EmailObfuscator.js' script should be prepended. Leave empty if you don't want the script to get added.");
+        $field->notes = __("Example </head> or </body>.");
+        $fields->append($field);
 
 
-		return $fields;
-	}
+        return $fields;
+    }
 }
