@@ -20,3 +20,4 @@ This Module will obfuscate all email on your website automaticly. It will add a 
 * 20/07/2016 - Added support for leaving script location configuration empty to not append the EmailObfuscator.js
 * 01/07/2016 - Changed regex to account for href="mailto: and href='mailto:
 * 30/03/2012 - Fixed bug with $config; added configuration for script location
+* 10/05/2023 - Fixed issue with php 7.2+ with create_function
